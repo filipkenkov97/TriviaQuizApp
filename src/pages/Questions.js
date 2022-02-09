@@ -23,7 +23,7 @@ const Questions = () => {
   const history = useHistory();
   const dispatch = useDispatch();
 
-  let apiUrl = `/api.php?amount=${amount_of_question}`;
+  let apiUrl = `/api.php?amount=10`;
   if (question_category) {
     apiUrl = apiUrl.concat(`&category=${question_category}`);
   }
@@ -35,12 +35,16 @@ const Questions = () => {
   }
 
   const { response, loading } = useAxios({ url: apiUrl });
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState({
+    index: 0,
+    isAnswered: false,
+    isCorrect: false,
+  });
   const [options, setOptions] = useState([]);
 
   useEffect(() => {
     if (response?.results.length) {
-      const question = response.results[questionIndex];
+      const question = response.results[currentQuestion.index];
       let answers = [...question.incorrect_answers];
       answers.splice(
         getRandomInt(question.incorrect_answers.length),
@@ -49,7 +53,7 @@ const Questions = () => {
       );
       setOptions(answers);
     }
-  }, [response, questionIndex]);
+  }, [response, currentQuestion.index]);
 
   if (loading) {
     return (
@@ -60,31 +64,71 @@ const Questions = () => {
   }
 
   const handleClickAnswer = (e) => {
-    const question = response.results[questionIndex];
-    if (e.target.textContent === question.correct_answer) {
+    const question = response.results[currentQuestion.index];
+    const isCorrectAnswer = e.target.textContent === question.correct_answer;
+    if (isCorrectAnswer) {
+      setCurrentQuestion((currQuestion) => ({
+        ...currQuestion,
+        isAnswered: true,
+        isCorrect: true,
+      }));
       dispatch(handleScoreChange(score + 1));
-    }
-
-    if (questionIndex + 1 < response.results.length) {
-      setQuestionIndex(questionIndex + 1);
     } else {
-      history.push("/finalscreen");
+      setCurrentQuestion((currQuestion) => ({
+        ...currQuestion,
+        isAnswered: true,
+        isCorrect: false,
+      }));
     }
   };
 
   return (
     <Box>
-      <Typography variant="h4">Questions {questionIndex + 1}</Typography>
-      <Typography mt={5}>
-        {decode(response.results[questionIndex].question)}
+      <Typography variant="h4">
+        Questions {currentQuestion.index + 1}
       </Typography>
-      {options.map((data, id) => (
-        <Box mt={2} key={id}>
-          <Button onClick={handleClickAnswer} variant="contained" color="secondary">
-            {decode(data)}
+      {currentQuestion.isAnswered && (
+        <>
+          <Typography mt={5}>
+            {currentQuestion.isCorrect ? "correct" : "incorrect"}
+          </Typography>
+          <Button
+            color="secondary"
+            variant="contained"
+            onClick={() => {
+              if (currentQuestion.index + 1 < response.results.length) {
+                setCurrentQuestion((currQuestion) => ({
+                  index: currQuestion.index + 1,
+                  isAnswered: false,
+                  isCorrect: false,
+                }));
+              } else {
+                history.push("/finalscreen");
+              }
+            }}
+          >
+            Next
           </Button>
-        </Box>
-      ))}
+        </>
+      )}
+      {!currentQuestion.isAnswered && (
+        <>
+          <Typography mt={5}>
+            {decode(response.results[currentQuestion.index].question)}
+          </Typography>
+          {options.map((data, id) => (
+            <Box mt={2} key={id}>
+              <Button
+                onClick={handleClickAnswer}
+                variant="contained"
+                color="secondary"
+              >
+                {decode(data)}
+              </Button>
+            </Box>
+          ))}
+        </>
+      )}
       <Box mt={5}>
         Score: {score} / {response.results.length}
       </Box>

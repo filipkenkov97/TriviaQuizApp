@@ -1,58 +1,60 @@
-import { Button, CircularProgress, Typography } from "@mui/material";
-import { Box } from "@mui/system";
+import { useState } from "react";
 import { useHistory } from "react-router-dom";
-import SelectField from "../components/SelectField";
-import QuestionNumber from "../components/QuestionNumber";
-import useAxios from "../hooks/useAxios";
+import { useDispatch } from "react-redux";
+
+import { Box } from "@mui/system";
+import { Button, Typography } from "@mui/material";
+
+import { handleDifficultyChange } from "../redux/actions";
 
 const Settings = () => {
-  const { response, error, loading } = useAxios({ url: "/api_category.php" });
+  const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
   const history = useHistory();
-
-  if (loading) {
-    return (
-      <Box mt={20}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Typography variant="h6" mt={20} color="red">
-        Some Went Wrong!
-      </Typography>
-    );
-  }
+  const dispatch = useDispatch();
 
   const difficultyOptions = [
-    { id: "easy", name: "Easy" },
-    { id: "medium", name: "Medium" },
-    { id: "hard", name: "Hard" },
+    { id: "easy", name: "Go easy on me" },
+    { id: "medium", name: "Bring it on" },
+    { id: "hard", name: "Insanity mood" },
   ];
 
-  const typeOptions = [
-    { id: "multiple", name: "Multiple Choise" },
-    { id: "boolean", name: "True/False" },
-  ];
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleClick = () => {
+    dispatch(handleDifficultyChange(selectedDifficulty));
     history.push("/questions");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <SelectField options={response.trivia_categories} label="Category" />
-      <SelectField options={difficultyOptions} label="Difficulty" />
-      <SelectField options={typeOptions} label="Type" />
-      <QuestionNumber />
+    <>
+      <Typography variant="h2" fontWeight="bold">
+        TriviaTime
+      </Typography>
+      <Typography variant="h5" fontWeight="bold">
+        Pick your level of difficulty
+      </Typography>
       <Box mt={3} width="100%">
-        <Button fullWidth variant="contained" type="submit" color="secondary">
-          start
+      {difficultyOptions.map((option) => (
+          <Button
+            key={option.id}
+            onClick={() => {
+              setSelectedDifficulty(option.id);
+            }}
+            variant="contained"
+            fullWidth
+            color={selectedDifficulty === option.id ? "secondary" : "primary"}
+          >
+            {option.name}
+          </Button>
+        ))}
+        <Button
+          onClick={handleClick}
+          fullWidth
+          variant="contained"
+          color="secondary"
+        >
+          Play Now
         </Button>
       </Box>
-    </form>
+    </>
   );
 };
 

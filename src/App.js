@@ -11,17 +11,14 @@ function App() {
       <Container maxWidth="sm">
         <Box textAlign="center" mt={5}>
           <Switch>
-            <Route path="/" exact>
-              <Typography variant="h2" fontWeight="bold">
-                Quiz App
-              </Typography>
+            <Route path="/" exact>              
               <Settings />
             </Route>
             <Route path="/questions">
               <Questions />
             </Route>
             <Route path="/finalscreen">
-              <FinalScreen />
+              <FinalScreen />            
             </Route>
           </Switch>
         </Box>
